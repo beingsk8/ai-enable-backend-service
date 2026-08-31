@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  reviews   Review[]
+  analytics Analytics[]
+}
+
+model Review {
+  id          String   @id @default(cuid())
+  userId      String
+  title       String
+  code        String
+  language    String
+  reviewType  String   // "snippet" | "diff"
+  
+  // AI Response
+  summary     String
+  issues      String   // JSON array of issues
+  suggestions String   // JSON array of suggestions
+  
+  // Metrics
+  criticalCount Int    @default(0)
+  warningCount  Int    @default(0)
+  infoCount     Int    @default(0)
+  
+  // GitHub format output
+  githubComments String? // JSON array of GitHub-formatted comments
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model Analytics {
+  id        String   @id @default(cuid())
+  userId    String
+  
+  // Issue tracking
+  issueType String   // e.g., "security", "performance", "best-practice", "bug"
+  count     Int      @default(1)
+  
+  // Time period
+  date      DateTime @default(now())
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([date])
+  @@index([issueType])
+}
